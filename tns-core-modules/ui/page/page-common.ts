@@ -17,17 +17,17 @@ export class PageBase extends ContentView implements PageDefinition {
     public static navigatedToEvent = "navigatedTo";
     public static navigatingFromEvent = "navigatingFrom";
     public static navigatedFromEvent = "navigatedFrom";
-  
+
     private _navigationContext: any;
     private _actionBar: ActionBar;
 
     public _frame: Frame;
-    
+
     public actionBarHidden: boolean;
     public enableSwipeBackNavigation: boolean;
     public backgroundSpanUnderStatusBar: boolean;
     public hasActionBar: boolean;
-    
+
     get navigationContext(): any {
         return this._navigationContext;
     }
@@ -89,7 +89,7 @@ export class PageBase extends ContentView implements PageDefinition {
         const frame = this.parent;
         return frame instanceof Frame ? frame : undefined;
     }
-    
+
     private createNavigatedData(eventName: string, isBackNavigation: boolean): NavigatedData {
         return {
             eventName: eventName,
@@ -101,6 +101,8 @@ export class PageBase extends ContentView implements PageDefinition {
 
     @profile
     public onNavigatingTo(context: any, isBackNavigation: boolean, bindingContext?: any) {
+        console.log("---> page-common onNavigatingTo");
+
         this._navigationContext = context;
 
         //https://github.com/NativeScript/NativeScript/issues/731
@@ -112,18 +114,24 @@ export class PageBase extends ContentView implements PageDefinition {
 
     @profile
     public onNavigatedTo(isBackNavigation: boolean) {
+        console.log("---> page-common onNavigatedTo");
+
         this.notify(this.createNavigatedData(PageBase.navigatedToEvent, isBackNavigation));
     }
 
     @profile
     public onNavigatingFrom(isBackNavigation: boolean) {
+        console.log("---> page-common onNavigatingFrom");
+
         this.notify(this.createNavigatedData(PageBase.navigatingFromEvent, isBackNavigation));
     }
 
     @profile
     public onNavigatedFrom(isBackNavigation: boolean) {
-        this.notify(this.createNavigatedData(PageBase.navigatedFromEvent, isBackNavigation));
+        console.log("---> page-common onNavigatedFrom");
+        this._onCssStateChange();
 
+        this.notify(this.createNavigatedData(PageBase.navigatedFromEvent, isBackNavigation));
         this._navigationContext = undefined;
     }
 

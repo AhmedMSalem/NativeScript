@@ -18,6 +18,7 @@ export * from "./application-common";
 import { createViewFromEntry } from "../ui/builder";
 import { ios as iosView, View } from "../ui/core/view";
 import { Frame, NavigationEntry } from "../ui/frame";
+import { loadCss } from "../ui/styling/style-scope";
 import * as utils from "../utils/utils";
 import { profile, level as profilingLevel, Level } from "../profiling";
 
@@ -150,7 +151,7 @@ class IOSApplication implements IOSApplicationDefinition {
             this.setWindowContent(args.root);
         } else {
             this._window = UIApplication.sharedApplication.delegate.window;
-        }   
+        }
     }
 
     @profile
@@ -214,10 +215,23 @@ class IOSApplication implements IOSApplicationDefinition {
         }
     }
 
-    public _onLivesync(): void {
-        // If view can't handle livesync set window controller.
-        if (!this._rootView._onLivesync()) {
-            this.setWindowContent();
+    public _onLivesync(context?: LivesyncContext): void {
+        console.log("---> application.ios _onLivesync");
+        console.log("---> application.ios context", context);
+        let executeLivesync = true;
+        // HMR has context, livesync does not
+        if (context) {
+            if (context.resource === getCssFileName()) {
+                loadCss(context.resource);
+                this._rootView._onCssStateChange();
+                executeLivesync = false;
+            }
+        }
+        if (executeLivesync) {
+            // If view can't handle livesync set window controller.
+            if (!this._rootView._onLivesync()) {
+                this.setWindowContent();
+            }
         }
     }
 
@@ -253,8 +267,10 @@ exports.ios = iosApp;
 setApplication(iosApp);
 
 // attach on global, so it can be overwritten in NativeScript Angular
-(<any>global).__onLiveSyncCore = function () {
-    iosApp._onLivesync();
+(<any>global).__onLiveSyncCore = function __onLiveSyncCore(context?: LivesyncContext) {
+    console.log("---> application.ios __onLiveSyncCore");
+    console.log("---> application.ios context", context);
+    iosApp._onLivesync(context);
 }
 
 let mainEntry: NavigationEntry;
@@ -362,10 +378,11 @@ function setViewControllerView(view: View): void {
     }
 }
 
-global.__onLiveSync = function () {
+global.__onLiveSync = function __onLiveSync(context?: LivesyncContext) {
     if (!started) {
         return;
     }
-
-    livesync();
+    console.log("---> application.ios global.__onLiveSync");
+    console.log("---> application.ios context", context);
+    livesync(context);
 }
